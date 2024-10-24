@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Часы и будильник</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #708090;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        nav {
+            margin-bottom: 30px;
+        }
+
+        nav a {
+            margin: 0 15px;
+            font-size: 18px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        nav a:hover {
+            color: #A0CBA4;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        #clock {
+            font-size: 48px;
+            color: #A0CBA4;
+            margin-bottom: 20px;
+        }
+
+        #alarm-time {
+            padding: 10px;
+            font-size: 18px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #A0CBA4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #708090;
+        }
+
+        #status {
+            font-size: 18px;
+            color: #333;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Таймер</a>
+        <a href="/clock">Часы</a>
+        <a href="/calendar">Календарь</a>
+    </nav>
+
+    <h1>Текущие время</h1>
+    <div id="clock">00:00:00</div>
+
+    <h2>Будильник</h2>
+    <input type="time" id="alarm-time" required>
+    <button onclick="setAlarm()">Установить будильник</button>
+    <button onclick="clearAlarm()">Сбросить будильник</button>
+
+
+    <button onclick="stopAlarmSound()">Остановить звук</button>
+
+    <div id="status">Будильник не установлен</div>
+
+    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            function updateClock() {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const timeString = `${hours}:${minutes}:${seconds}`;
+                document.getElementById('clock').textContent = timeString;
+            }
+
+            setInterval(updateClock, 1000);
+
+            let alarmTime = null;
+            let alarmTimeout = null;
+            const alarmSound = document.getElementById('alarm-sound');
+
+            function setAlarm() {
+                const alarmInput = document.getElementById('alarm-time').value;
+                if (!alarmInput) {
+                    alert('Пожалуйста, выберите время будильника.');
+                    return;
+                }
+
+                alarmTime = new Date();
+                const [hours, minutes] = alarmInput.split(':');
+                alarmTime.setHours(hours);
+                alarmTime.setMinutes(minutes);
+                alarmTime.setSeconds(0);
+
+                const currentTime = new Date();
+                if (alarmTime < currentTime) {
+                    alarmTime.setDate(alarmTime.getDate() + 1);
+                }
+
+                const timeToAlarm = alarmTime - currentTime;
+                document.getElementById('status').textContent = `Будильник установлен на ${alarmInput}.`;
+
+                alarmTimeout = setTimeout(() => {
+                    alarmSound.volume = 1;
+                    alarmSound.play();
+                    document.getElementById('status').textContent = 'Звонок будильника!';
+                }, timeToAlarm);
+            }
+
+            function clearAlarm() {
+                if (alarmTimeout) {
+                    clearTimeout(alarmTimeout);
+                    alarmTimeout = null;
+                    document.getElementById('status').textContent = 'Будильник сброшен.';
+                }
+            }
+
+
+            function stopAlarmSound() {
+                alarmSound.pause();
+                alarmSound.currentTime = 0;
+                document.getElementById('status').textContent = 'Звук будильника остановлен.';
+            }
+
+
+            window.setAlarm = setAlarm;
+            window.clearAlarm = clearAlarm;
+            window.stopAlarmSound = stopAlarmSound;
+        });
+    </script>
+
+<button onclick="openWorldTime()">Время мира</button>
+
+<script>
+    function openWorldTime() {
+        window.location.href = "/world-time";
+    }
+</script>
+
+</body>
+</html>

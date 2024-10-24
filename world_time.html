@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Время в городах мира</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #708090;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        h1 {
+          color: #A0CBA4;
+        }
+
+
+        table {
+            border-collapse: collapse;
+            width: 60%;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #A0CBA4;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #ddd;
+        }
+
+
+        .button-container {
+            margin-top: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #A0CBA4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #708090;
+        }
+    </style>
+</head>
+<body>
+    <h1>Текущее время в городах мира</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Город</th>
+                <th>Время</th>
+            </tr>
+        </thead>
+        <tbody id="world-time-table">
+        </tbody>
+    </table>
+
+    <div class="button-container">
+        <button onclick="window.location.href='/'">Вернуться на главную</button>
+    </div>
+
+    <script>
+        const cities = {
+            "Нью-Йорк": "America/New_York",
+            "Лондон": "Europe/London",
+            "Париж": "Europe/Paris",
+            "Москва": "Europe/Moscow",
+            "Токио": "Asia/Tokyo",
+            "Сидней": "Australia/Sydney",
+            "Дубай": "Asia/Dubai",
+            "Оттава": "America/Toronto",
+            "Бразилиа": "America/Sao_Paulo",
+            "Берн": "Europe/Zurich",
+            "Варшава": "Europe/Warsaw",
+            "Киев": "Europe/Kiev",
+            "Барселона": "Europe/Madrid"
+        };
+
+        function updateWorldTime() {
+            const tableBody = document.getElementById('world-time-table');
+            tableBody.innerHTML = '';
+            for (const [city, timeZone] of Object.entries(cities)) {
+                const now = new Date().toLocaleString("ru-RU", { timeZone: timeZone, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const row = `<tr><td>${city}</td><td>${now}</td></tr>`;
+                tableBody.innerHTML += row;
+            }
+        }
+
+        updateWorldTime();
+        setInterval(updateWorldTime, 1000);
+    </script>
+</body>
+</html>

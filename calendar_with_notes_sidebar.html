@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Календарь с заметками на 2024 год</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #708090;
+            color: white;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-right: 20px;
+            width: 70%;
+        }
+
+        .month-container {
+            background-color: #A0CBA4;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .month {
+            text-align: center;
+            color: white;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .days, .dates {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            gap: 5px;
+        }
+
+        .day {
+            background-color: #ddd;
+            color: #333;
+            padding: 10px;
+        }
+
+        .date {
+            background-color: white;
+            color: black;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .date:hover {
+            background-color: #A0CBA4;
+        }
+
+        .date.note {
+            background-color: orange;
+            color: white;
+        }
+
+        .empty {
+            background-color: transparent;
+        }
+
+        .notes-section {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            width: 30%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notes-section h2 {
+            color: #A0CBA4;
+            margin-bottom: 20px;
+        }
+
+        .notes-section textarea {
+            flex: 1;
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            color: black;
+            border-radius: 5px;
+        }
+
+        .notes-section button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #A0CBA4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .notes-section button:hover {
+            background-color: #708090;
+        }
+
+        .delete-button {
+            background-color: red;
+        }
+
+        .delete-button:hover {
+            background-color: darkred;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Календарь с заметками на 2024 год</h1>
+
+    <div class="container">
+        <div class="calendar" id="calendar">
+            <!-- Календарь будет добавлен с помощью JavaScript -->
+        </div>
+
+        <!-- Боковая панель с заметками -->
+        <div class="notes-section">
+            <h2 id="note-date">Выберите дату</h2>
+            <textarea id="note-text" placeholder="Введите заметку..."></textarea>
+            <button onclick="saveNote()">Сохранить</button>
+            <button class="delete-button" onclick="deleteNote()">Удалить заметку</button>
+        </div>
+    </div>
+
+    <script>
+        const monthNames = [
+            "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+            "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+        ];
+
+        const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const startDayInMonth = [1, 4, 4, 7, 2, 5, 7, 3, 6, 1, 4, 6]; // 1 - Monday, etc.
+
+        const calendarContainer = document.getElementById("calendar");
+        let currentNoteDate = null;
+        let datesWithNotes = [];
+
+        // Создание календаря
+        function generateCalendar() {
+            for (let i = 0; i < 12; i++) {
+                const monthContainer = document.createElement("div");
+                monthContainer.classList.add("month-container");
+
+                const monthTitle = document.createElement("div");
+                monthTitle.classList.add("month");
+                monthTitle.innerText = monthNames[i];
+                monthContainer.appendChild(monthTitle);
+
+                const daysHeader = document.createElement("div");
+                daysHeader.classList.add("days");
+                ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].forEach(day => {
+                    const dayElem = document.createElement("div");
+                    dayElem.classList.add("day");
+                    dayElem.innerText = day;
+                    daysHeader.appendChild(dayElem);
+                });
+                monthContainer.appendChild(daysHeader);
+
+                const datesContainer = document.createElement("div");
+                datesContainer.classList.add("dates");
+
+                for (let j = 1; j < startDayInMonth[i]; j++) {
+                    const emptyElem = document.createElement("div");
+                    emptyElem.classList.add("empty");
+                    datesContainer.appendChild(emptyElem);
+                }
+
+                for (let j = 1; j <= daysInMonth[i]; j++) {
+                    const dateElem = document.createElement("div");
+                    dateElem.classList.add("date");
+                    dateElem.setAttribute('data-date', `${j}-${i + 1}-2024`); // Добавляем атрибут для каждой даты
+                    dateElem.innerText = j;
+                    const fullDate = `${j}-${i + 1}-2024`;
+                    if (datesWithNotes.includes(fullDate)) {
+                        dateElem.classList.add('note'); // Если для даты есть заметка, подсвечиваем
+                    }
+                    dateElem.onclick = () => loadNoteForDate(fullDate);
+                    datesContainer.appendChild(dateElem);
+                }
+
+                monthContainer.appendChild(datesContainer);
+                calendarContainer.appendChild(monthContainer);
+            }
+        }
+
+        // Функция для загрузки заметки на выбранную дату
+        function loadNoteForDate(date) {
+            currentNoteDate = date;
+            document.getElementById("note-date").innerText = `Заметка для ${date}`;
+            fetch(`/get_note/${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("note-text").value = data.note || "";
+                });
+        }
+
+        // Функция для сохранения заметки
+        function saveNote() {
+            const noteText = document.getElementById("note-text").value;
+            fetch('/save_note', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    date: currentNoteDate,
+                    note: noteText
+                })
+            }).then(response => response.json())
+              .then(data => {
+                  const dateElem = document.querySelector(`.date[data-date='${currentNoteDate}']`);
+                  if (noteText.trim()) {
+                      dateElem.classList.add('note'); // Если есть заметка, подсвечиваем
+                  } else {
+                      dateElem.classList.remove('note'); // Если заметка удалена, убираем подсветку
+                  }
+              });
+        }
+
+        // Функция для удаления заметки
+        function deleteNote() {
+            document.getElementById("note-text").value = ""; // Очищаем поле заметки
+            saveNote(); // Сохраняем пустую заметку, что удаляет её
+        }
+
+        // Функция для получения всех дат с заметками
+        function fetchDatesWithNotes() {
+            fetch('/get_all_notes')
+                .then(response => response.json())
+                .then(data => {
+                    datesWithNotes = data.dates;
+                    generateCalendar(); // Сначала получаем даты, затем строим календарь
+                });
+        }
+
+        fetchDatesWithNotes(); // Запуск функции получения заметок при загрузке
+    </script>
+</body>
+</html>

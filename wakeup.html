@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Будильник</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #333;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 18px;
+        }
+
+        #alarm-time {
+            width: 200px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #status {
+            font-size: 18px;
+            color: #333;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Будильник</h1>
+    <input type="time" id="alarm-time" required>
+    <button onclick="setAlarm()">Установить будильник</button>
+    <div id="status">Будильник не установлен</div>
+
+    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
+
+    <script>
+        let alarmTime = null;
+        let alarmTimeout = null;
+
+        function setAlarm() {
+            const alarmInput = document.getElementById('alarm-time').value;
+            if (!alarmInput) {
+                alert('Пожалуйста, выберите время будильника.');
+                return;
+            }
+
+            alarmTime = new Date();
+            const [hours, minutes] = alarmInput.split(':');
+            alarmTime.setHours(hours);
+            alarmTime.setMinutes(minutes);
+            alarmTime.setSeconds(0);
+
+            const currentTime = new Date();
+            if (alarmTime < currentTime) {
+                alarmTime.setDate(alarmTime.getDate() + 1);
+            }
+
+            const timeToAlarm = alarmTime - currentTime;
+            document.getElementById('status').textContent = `Будильник установлен на ${alarmInput}.`;
+
+            alarmTimeout = setTimeout(() => {
+                document.getElementById('alarm-sound').play();
+                document.getElementById('status').textContent = 'Звонок будильника!';
+            }, timeToAlarm);
+        }
+
+        function clearAlarm() {
+            if (alarmTimeout) {
+                clearTimeout(alarmTimeout);
+                alarmTimeout = null;
+                document.getElementById('status').textContent = 'Будильник сброшен.';
+            }
+        }
+    </script>
+</body>
+</html>

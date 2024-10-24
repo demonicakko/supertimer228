@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таймер</title>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #708090;
+            margin: 0;
+            flex-direction: column;
+            position: relative;
+        }
+
+
+        .container {
+            text-align: center;
+        }
+
+        nav {
+            margin-bottom: 30px;
+        }
+
+        nav a {
+            margin: 0 15px;
+            font-size: 30px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        nav a:hover {
+            color: #A0CBA4;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #A0CBA4;
+            margin-bottom: 30px;
+        }
+
+        #circle {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 10px solid #ddd;
+            position: relative;
+        }
+
+        #progress {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(#A0CBA4 0%, #ddd 0%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            color: #333;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #A0CBA4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #A0CBA4;
+        }
+
+
+        #converterTable {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            border-collapse: collapse;
+        }
+
+        #converterTable th, #converterTable td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #converterTable th {
+            background-color: #A0CBA4;
+        }
+
+        input[type="number"] {
+            width: 100px;
+        }
+
+
+        #convertButton {
+            position: absolute;
+            top: 140px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #A0CBA4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #convertButton:hover {
+            background-color: #A0CBA4;
+        }
+    </style>
+    <script>
+        const bellSound = new Audio('/static/bell.mp3');
+        const sirenSound = new Audio('/static/siren.mp3');
+
+        function updateTimer() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    const progressDiv = document.getElementById('progress');
+                    const remainingTime = data.remaining;
+                    const totalTime = data.duration;
+
+                    if (data.active) {
+                        let percentage = ((totalTime - remainingTime) / totalTime) * 100;
+                        progressDiv.style.background = `conic-gradient(#A0CBA4 ${percentage}%, #ddd ${percentage}%)`;
+                        progressDiv.textContent = remainingTime + 's';
+                    } else if (totalTime > 0 && remainingTime === 0) {
+                        progressDiv.style.background = 'conic-gradient(#A0CBA4 100%, #ddd 0%)';
+                        progressDiv.textContent = 'Время истекло!';
+
+
+                        bellSound.play();
+                        setTimeout(() => {
+                            sirenSound.play();
+                        }, 2000);
+                    }
+                });
+        }
+
+        setInterval(updateTimer, 1000);
+
+        function convertToSeconds() {
+            var minutes = document.getElementById("minutesInput").value;
+            var seconds = minutes * 60;
+            document.getElementById("secondsOutput").innerHTML = seconds + " секунд";
+        }
+    </script>
+
+</head>
+<body>
+
+    <nav>
+        <a href="/">Таймер</a>
+        <a href="/clock">Часы</a>
+        <a href="/calendar">Календарь</a>
+    </nav>
+
+    <div class="container">
+        <h1>Таймер</h1>
+        <div id="circle">
+            <div id="progress">
+                {% if timer.active %}
+                    {{ timer.remaining }}s
+                {% elif timer.duration > 0 %}
+                    Время истекло!
+                {% else %}
+                    0s
+                {% endif %}
+            </div>
+        </div>
+
+        <form method="POST">
+            <input type="number" name="duration" min="1" placeholder="Введите секунды" required>
+            <button type="submit">Запустить таймер</button>
+        </form>
+    </div>
+
+    <table id="converterTable">
+        <tr>
+            <th>Введите минуты</th>
+            <th>Результат в секундах</th>
+        </tr>
+        <tr>
+            <td>
+                <input type="number" id="minutesInput" placeholder="Минуты">
+            </td>
+            <td>
+                <span id="secondsOutput">0 секунд</span>
+            </td>
+        </tr>
+    </table>
+
+    <button id="convertButton" onclick="convertToSeconds()">Конвертировать</button>
+
+<button onclick="openWorldTime()">Время мира</button>
+
+<script>
+    function openWorldTime() {
+        window.location.href = "/world-time";
+    }
+</script>
+
+
+</body>
+</html>

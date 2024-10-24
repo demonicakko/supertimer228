@@ -1,0 +1,245 @@
+<!-- templates/calendar_with_notes.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Календарь на 2024 год</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #708090;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #A0CBA4;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+            width: 100%;
+        }
+
+        .month-container {
+            background-color: #A0CBA4;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .month {
+            text-align: center;
+            color: white;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .days, .dates {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            gap: 5px;
+        }
+
+        .day {
+            background-color: #ddd;
+            color: #333;
+            padding: 10px;
+        }
+
+        .date {
+            background-color: white;
+            color: black;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .date:hover {
+            background-color: #A0CBA4;
+        }
+
+        .empty {
+            background-color: transparent;
+        }
+
+        /* Стиль для всплывающего окна заметок */
+        #note-modal {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        #note-modal textarea {
+            width: 100%;
+            height: 100px;
+        }
+
+        .modal-background {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 900;
+        }
+
+        .nav-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #A0CBA4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .nav-button:hover {
+            background-color: #708090;
+        }
+
+        /* Кнопки всплывающего окна */
+        .modal-buttons {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            background-color: #A0CBA4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .modal-buttons button:hover {
+            background-color: #708090;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Календарь на 2024 год</h1>
+
+    <div class="calendar" id="calendar">
+        <!-- Здесь будет динамически добавлен календарь с месяцами и днями -->
+    </div>
+
+    <button class="nav-button" onclick="window.location.href='/'">Вернуться на главную</button>
+
+    <!-- Всплывающее окно для заметок -->
+    <div id="note-modal">
+        <h3 id="note-date"></h3>
+        <textarea id="note-text"></textarea>
+        <div class="modal-buttons">
+            <button onclick="saveNote()">Сохранить</button>
+            <button onclick="closeModal()">Отмена</button>
+        </div>
+    </div>
+    <div class="modal-background" id="modal-bg"></div>
+
+    <script>
+        const monthNames = [
+            "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+            "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+        ];
+
+        const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const startDayInMonth = [1, 4, 4, 7, 2, 5, 7, 3, 6, 1, 4, 6]; // 1 - Monday, etc.
+
+        const calendarContainer = document.getElementById("calendar");
+        let currentNoteDate = null;
+
+        // Создание календаря
+        function generateCalendar() {
+            for (let i = 0; i < 12; i++) {
+                const monthContainer = document.createElement("div");
+                monthContainer.classList.add("month-container");
+
+                const monthTitle = document.createElement("div");
+                monthTitle.classList.add("month");
+                monthTitle.innerText = monthNames[i];
+                monthContainer.appendChild(monthTitle);
+
+                const daysHeader = document.createElement("div");
+                daysHeader.classList.add("days");
+                ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].forEach(day => {
+                    const dayElem = document.createElement("div");
+                    dayElem.classList.add("day");
+                    dayElem.innerText = day;
+                    daysHeader.appendChild(dayElem);
+                });
+                monthContainer.appendChild(daysHeader);
+
+                const datesContainer = document.createElement("div");
+                datesContainer.classList.add("dates");
+
+                for (let j = 1; j < startDayInMonth[i]; j++) {
+                    const emptyElem = document.createElement("div");
+                    emptyElem.classList.add("empty");
+                    datesContainer.appendChild(emptyElem);
+                }
+
+                for (let j = 1; j <= daysInMonth[i]; j++) {
+                    const dateElem = document.createElement("div");
+                    dateElem.classList.add("date");
+                    dateElem.innerText = j;
+                    dateElem.onclick = () => openModal(i + 1, j);
+                    datesContainer.appendChild(dateElem);
+                }
+
+                monthContainer.appendChild(datesContainer);
+                calendarContainer.appendChild(monthContainer);
+            }
+        }
+
+        // Открыть модальное окно для заметки
+        function openModal(month, day) {
+            currentNoteDate = `${day}-${month}-2024`;
+            document.getElementById("note-date").innerText = `Заметка для ${currentNoteDate}`;
+            const savedNote = localStorage.getItem(currentNoteDate);
+            document.getElementById("note-text").value = savedNote ? savedNote : "";
+            document.getElementById("note-modal").style.display = "block";
+            document.getElementById("modal-bg").style.display = "block";
+        }
+
+        // Закрыть модальное окно
+        function closeModal() {
+            document.getElementById("note-modal").style.display = "none";
+            document.getElementById("modal-bg").style.display = "none";
+        }
+
+        // Сохранить заметку в localStorage
+        function saveNote() {
+            const noteText = document.getElementById("note-text").value;
+            if (noteText.trim()) {
+                localStorage.setItem(currentNoteDate, noteText);
+            } else {
+                localStorage.removeItem(currentNoteDate);
+            }
+            closeModal();
+        }
+
+        generateCalendar();
+    </script>
+</body>
+</html>
